@@ -11,12 +11,10 @@ pub fn part1(input: &str) -> String {
             }
 
             let (left, right) = items.split_at(items.len() / 2);
-            let exists_left: HashSet<char> = HashSet::from_iter(left.iter().copied());
-            let exists_right: HashSet<char> = HashSet::from_iter(right.iter().copied());
-
-            let letter = exists_left
-                .intersection(&exists_right)
-                .copied()
+            let letter = left
+                .into_iter()
+                .filter(|l| right.into_iter().find(|r| l == r).is_some())
+                .cloned()
                 .next()
                 .unwrap();
 
@@ -38,10 +36,14 @@ pub fn part2(input: &str) -> String {
         .map(|lines| {
             let collisions = lines
                 .iter()
-                .map(|line| HashSet::from_iter(line.chars()))
-                .fold(None, |left, right: HashSet<char>| match left {
+                .map(|line| line.chars().collect())
+                .fold(None, |left, right: Vec<char>| match left {
                     None => Some(right),
-                    Some(left) => Some(HashSet::from_iter(left.intersection(&right).copied())),
+                    Some(left) => Some(
+                        left.into_iter()
+                            .filter(|l| right.iter().find(|r| l == *r).is_some())
+                            .collect()
+                    ),
                 })
                 .unwrap();
 
