@@ -15,7 +15,7 @@ impl From<char> for Choice {
             'X' => Self::Rock,
             'Y' => Self::Paper,
             'Z' => Self::Scissors,
-            _ => panic!("invalid char")
+            _ => panic!("invalid char"),
         }
     }
 }
@@ -25,7 +25,7 @@ fn to_ordering(c: char) -> Ordering {
         'X' => Ordering::Less,
         'Y' => Ordering::Equal,
         'Z' => Ordering::Greater,
-        _ => panic!("invalid char")
+        _ => panic!("invalid char"),
     }
 }
 
@@ -81,14 +81,16 @@ impl Choice {
 
 pub fn part1(input: &str) -> String {
     let result: u32 = input
-        .split("\n")
+        .lines()
         .map(|round| {
             let mut choices = round
                 .split(" ")
-                .map(|v| v.chars().map(|c| {
-                    let c: Choice = c.into();
-                    c
-                }))
+                .map(|v| {
+                    v.chars().map(|c| {
+                        let c: Choice = c.into();
+                        c
+                    })
+                })
                 .flatten();
 
             let them = match choices.next() {
@@ -110,17 +112,11 @@ pub fn part1(input: &str) -> String {
 
 pub fn part2(input: &str) -> String {
     let result: u32 = input
-        .split("\n")
+        .lines()
         .map(|round| {
-            let mut choices = round
-                .split(" ")
-                .map(|v| v.chars())
-                .flatten();
+            let mut choices = round.split(" ").map(|v| v.chars()).flatten();
 
-            let them: Choice = match choices.next() {
-                Some(them) => them.into(),
-                None => return 0,
-            };
+            let them: Choice = choices.next().unwrap().into();
             let outcome = choices.next().unwrap();
             let target = to_ordering(outcome);
             let us = them.target(target);

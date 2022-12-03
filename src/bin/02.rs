@@ -6,4 +6,3 @@ fn main() {
     println!("{}", day02::part1(input));
     println!("{}", day02::part2(input));
 }
-
