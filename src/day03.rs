@@ -6,27 +6,23 @@ pub fn part1(input: &str) -> String {
         .map(|line| {
             let items: Vec<char> = line.chars().collect();
 
-            let length = items.len();
-            if length == 0 {
+            if items.is_empty() {
                 return 0;
             }
 
-            let middle = length / 2;
-            let left = &items[0..middle];
-            let right = &items[middle..length];
-            let exists_left: HashSet<char> = HashSet::from_iter(left.iter().map(|x| *x));
-            let exists_right: HashSet<char> = HashSet::from_iter(right.iter().map(|x| *x));
+            let (left, right) = items.split_at(items.len() / 2);
+            let exists_left: HashSet<char> = HashSet::from_iter(left.iter().copied());
+            let exists_right: HashSet<char> = HashSet::from_iter(right.iter().copied());
 
             let letter = exists_left
                 .intersection(&exists_right)
-                .map(|x| *x)
+                .copied()
                 .next()
-                .unwrap_or(' ');
+                .unwrap();
 
-            match letter {
-                'a'..='z' => letter as u32 - 96,
-                'A'..='Z' => letter as u32 - 38,
-                _ => 0,
+            match letter.is_ascii_uppercase() {
+                true => letter as u32 - 38,
+                _ => letter as u32 - 96,
             }
         })
         .sum();
@@ -45,19 +41,18 @@ pub fn part2(input: &str) -> String {
                 .map(|line| HashSet::from_iter(line.chars()))
                 .fold(None, |left, right: HashSet<char>| match left {
                     None => Some(right),
-                    Some(left) => Some(HashSet::from_iter(left.intersection(&right).map(|v| *v))),
+                    Some(left) => Some(HashSet::from_iter(left.intersection(&right).copied())),
                 })
                 .unwrap();
 
-            if collisions.len() == 0 {
+            if collisions.is_empty() {
                 return 0;
             }
 
             let letter = *collisions.iter().next().unwrap();
-            match letter {
-                'a'..='z' => letter as u32 - 96,
-                'A'..='Z' => letter as u32 - 38,
-                _ => 0,
+            match letter.is_ascii_uppercase() {
+                true => letter as u32 - 38,
+                _ => letter as u32 - 96,
             }
         })
         .sum();
