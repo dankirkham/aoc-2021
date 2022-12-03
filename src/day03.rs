@@ -1,63 +1,49 @@
-use std::collections::{VecDeque, HashSet};
+use std::collections::HashSet;
 
 pub fn part1(input: &str) -> String {
-    let result: u32 = input.lines().map(|line| {
-        let items: VecDeque<char> = line
-            .chars()
-            .collect();
+    let result: u32 = input
+        .lines()
+        .map(|line| {
+            let items: Vec<char> = line.chars().collect();
 
-        let mut exists_left: HashSet<char> = HashSet::new();
-        let mut exists_right: HashSet<char> = HashSet::new();
+            let length = items.len();
+            if length == 0 {
+                return 0;
+            }
 
-        if items.len() == 0 {
-            return 0;
-        }
+            let middle = length / 2;
+            let left = &items[0..middle];
+            let right = &items[middle..length];
+            let exists_left: HashSet<char> = HashSet::from_iter(left.iter().map(|x| *x));
+            let exists_right: HashSet<char> = HashSet::from_iter(right.iter().map(|x| *x));
 
-        let mut left = 0;
-        let mut right = items.len() - 1;
+            let letter = exists_left
+                .intersection(&exists_right)
+                .map(|x| *x)
+                .next()
+                .unwrap_or(' ');
 
-        while left < right {
-            let l = items[left];
-            let r = items[right];
-
-            left += 1;
-            right -= 1;
-
-            exists_left.insert(l);
-            exists_right.insert(r);
-        }
-
-        let collisions: Vec<char> = exists_left.intersection(&exists_right).map(|x| *x).collect();
-
-        let letter = match collisions.get(0) {
-            Some(c) => *c,
-            None => ' ',
-        };
-
-        match letter {
-            'a'..='z' => letter as u32 - 'a' as u32 + 1,
-            'A'..='Z' => letter as u32 - 'A' as u32 + 27,
-            _ => 0,
-        }
-    })
-    .sum();
+            match letter {
+                'a'..='z' => letter as u32 - 96,
+                'A'..='Z' => letter as u32 - 38,
+                _ => 0,
+            }
+        })
+        .sum();
 
     format!("{}", result)
 }
 
 pub fn part2(input: &str) -> String {
-    let result: u32 = input
-        .lines()
-        .collect::<Vec<_>>()
+    let rucksacks: Vec<&str> = input.lines().collect::<Vec<_>>();
+
+    let result: u32 = rucksacks
         .chunks(3)
         .map(|lines| {
             let collisions = lines
                 .iter()
-                .map(|line| {
-                    let items: HashSet<char> = HashSet::from_iter(line.chars());
-                    items
-                })
-                .fold(None, |left, right| match left {
+                .map(|line| HashSet::from_iter(line.chars()))
+                .fold(None, |left, right: HashSet<char>| match left {
                     None => Some(right),
                     Some(left) => Some(HashSet::from_iter(left.intersection(&right).map(|v| *v))),
                 })
@@ -69,8 +55,8 @@ pub fn part2(input: &str) -> String {
 
             let letter = *collisions.iter().next().unwrap();
             match letter {
-                'a'..='z' => letter as u32 - 'a' as u32 + 1,
-                'A'..='Z' => letter as u32 - 'A' as u32 + 27,
+                'a'..='z' => letter as u32 - 96,
+                'A'..='Z' => letter as u32 - 38,
                 _ => 0,
             }
         })
