@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 pub fn part1(input: &str) -> String {
     let result: u32 = input
         .lines()
@@ -34,24 +32,19 @@ pub fn part2(input: &str) -> String {
     let result: u32 = rucksacks
         .chunks(3)
         .map(|lines| {
-            let collisions = lines
+            let chars: Vec<Vec<char>> = lines
                 .iter()
-                .map(|line| line.chars().collect())
-                .fold(None, |left, right: Vec<char>| match left {
-                    None => Some(right),
-                    Some(left) => Some(
-                        left.into_iter()
-                            .filter(|l| right.iter().find(|r| l == *r).is_some())
-                            .collect()
-                    ),
-                })
+                .map(|&line| line.chars().collect())
+                .collect();
+
+            let letter = *chars
+                .get(0)
+                .unwrap()
+                .iter()
+                .filter(|&c| chars[1..].iter().all(|v| v.contains(c)))
+                .next()
                 .unwrap();
 
-            if collisions.is_empty() {
-                return 0;
-            }
-
-            let letter = *collisions.iter().next().unwrap();
             match letter.is_ascii_uppercase() {
                 true => letter as u32 - 38,
                 _ => letter as u32 - 96,
