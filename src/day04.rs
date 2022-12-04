@@ -2,9 +2,9 @@ pub fn part1(input: &str) -> String {
     let result = input
         .lines()
         .filter(|line| {
-            let pair = line.split(",").collect::<Vec<_>>();
-            let left = pair[0];
-            let right = pair[1];
+            let mut pair = line.split(",");
+            let left = pair.next().unwrap();
+            let right = pair.next().unwrap();
 
             let mut lefts = left.split("-");
             let left_min = lefts.next().unwrap().parse::<u32>().unwrap();
@@ -33,9 +33,9 @@ pub fn part2(input: &str) -> String {
     let result = input
         .lines()
         .filter(|line| {
-            let pair = line.split(",").collect::<Vec<_>>();
-            let left = pair[0];
-            let right = pair[1];
+            let mut pair = line.split(",");
+            let left = pair.next().unwrap();
+            let right = pair.next().unwrap();
 
             let mut lefts = left.split("-");
             let left_min = lefts.next().unwrap().parse::<u32>().unwrap();
