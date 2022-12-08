@@ -45,7 +45,6 @@ fn read(input: &str) -> (Vec<Vec<char>>, Vec<(usize, usize, usize)>) {
     (state, instructions)
 }
 
-
 fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
     assert!(!v.is_empty());
     let len = v[0].len();
@@ -63,16 +62,14 @@ fn transpose<T>(v: Vec<Vec<T>>) -> Vec<Vec<T>> {
 pub fn part1(input: &str) -> String {
     let (mut state, instructions) = read(input);
 
-    instructions
-        .into_iter()
-        .for_each(|(qty, src, dst)| {
-            for _ in 0..qty {
-                let src_v = &mut state[src - 1];
-                let val = src_v.pop().unwrap();
-                let dst_v = &mut state[dst - 1];
-                dst_v.push(val);
-            }
-        });
+    instructions.into_iter().for_each(|(qty, src, dst)| {
+        for _ in 0..qty {
+            let src_v = &mut state[src - 1];
+            let val = src_v.pop().unwrap();
+            let dst_v = &mut state[dst - 1];
+            dst_v.push(val);
+        }
+    });
 
     state
         .into_iter()
@@ -83,22 +80,20 @@ pub fn part1(input: &str) -> String {
 pub fn part2(input: &str) -> String {
     let (mut state, instructions) = read(input);
 
-    instructions
-        .into_iter()
-        .for_each(|(qty, src, dst)| {
-            let mut transfer_stack: Vec<char> = Vec::with_capacity(qty);
-            for _ in 0..qty {
-                let src_v = &mut state[src - 1];
-                let val = src_v.pop().unwrap();
-                transfer_stack.push(val)
-            }
+    instructions.into_iter().for_each(|(qty, src, dst)| {
+        let mut transfer_stack: Vec<char> = Vec::with_capacity(qty);
+        for _ in 0..qty {
+            let src_v = &mut state[src - 1];
+            let val = src_v.pop().unwrap();
+            transfer_stack.push(val)
+        }
 
-            for _ in 0..qty {
-                let val = transfer_stack.pop().unwrap();
-                let dst_v = &mut state[dst - 1];
-                dst_v.push(val);
-            }
-        });
+        for _ in 0..qty {
+            let val = transfer_stack.pop().unwrap();
+            let dst_v = &mut state[dst - 1];
+            dst_v.push(val);
+        }
+    });
 
     state
         .into_iter()

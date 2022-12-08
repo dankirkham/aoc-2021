@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 fn to_val(c: char) -> usize {
     c as usize - 97
 }
- 
+
 pub fn part1(input: &str) -> String {
     let mut counts: Vec<usize> = vec![0; 26];
     let mut seq: VecDeque<char> = VecDeque::with_capacity(4);
