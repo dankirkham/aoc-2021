@@ -1,6 +1,6 @@
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::iter;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct Node {
@@ -16,21 +16,21 @@ pub enum NodeType {
 
 pub fn directories(node: &Rc<RefCell<Node>>) -> Vec<Rc<RefCell<Node>>> {
     match &node.borrow().node_type {
-         NodeType::File(_) => Vec::new(),
-         NodeType::Dir(children) => {
-             let me = iter::once(node.clone());
+        NodeType::File(_) => Vec::new(),
+        NodeType::Dir(children) => {
+            let me = iter::once(node.clone());
 
-             let children = children.iter().map(directories).flatten();
+            let children = children.iter().map(directories).flatten();
 
-             me.chain(children).collect()
-         },
+            me.chain(children).collect()
+        }
     }
 }
 
 pub fn size(node: &Rc<RefCell<Node>>) -> usize {
     match &node.borrow().node_type {
-         NodeType::File(size) => *size,
-         NodeType::Dir(children) => children.iter().map(size).sum::<usize>(),
+        NodeType::File(size) => *size,
+        NodeType::Dir(children) => children.iter().map(size).sum::<usize>(),
     }
 }
 
@@ -89,14 +89,15 @@ pub fn read(input: &str) -> Rc<RefCell<Node>> {
         let command = tokens.next().unwrap();
 
         match command {
-            "cd" => {
-                match tokens.next().unwrap() {
-                    ".." => current_node = dir_stack.pop().unwrap(),
-                    path => {
-                        let new_dir = current_node.borrow_mut().child_by_name_or_create(path).unwrap();
-                        dir_stack.push(current_node);
-                        current_node = new_dir;
-                    }
+            "cd" => match tokens.next().unwrap() {
+                ".." => current_node = dir_stack.pop().unwrap(),
+                path => {
+                    let new_dir = current_node
+                        .borrow_mut()
+                        .child_by_name_or_create(path)
+                        .unwrap();
+                    dir_stack.push(current_node);
+                    current_node = new_dir;
                 }
             },
             "ls" => {
@@ -114,7 +115,7 @@ pub fn read(input: &str) -> Rc<RefCell<Node>> {
                             size => Node {
                                 name,
                                 node_type: NodeType::File(size.parse().unwrap()),
-                            }
+                            },
                         };
 
                         size = None;
@@ -127,12 +128,11 @@ pub fn read(input: &str) -> Rc<RefCell<Node>> {
                         } else {
                             panic!("Current node is not a directory");
                         }
-
                     } else {
                         size = Some(token);
                     }
                 }
-            },
+            }
             s => panic!("unexpected '{}'", s),
         }
     }
@@ -143,7 +143,12 @@ pub fn read(input: &str) -> Rc<RefCell<Node>> {
 pub fn part1(input: &str) -> String {
     let tree = read(input);
     let dirs = directories(&tree);
-    let result = dirs.iter().map(size).filter(|&s| s <= 100000_usize).sum::<usize>().clone();
+    let result = dirs
+        .iter()
+        .map(size)
+        .filter(|&s| s <= 100000_usize)
+        .sum::<usize>()
+        .clone();
     format!("{}", result)
 }
 
@@ -154,7 +159,11 @@ pub fn part2(input: &str) -> String {
     let total_size = size(&tree);
     let free_space = 70000000 - total_size;
     let needed_space = 30000000 - free_space;
-    let mut candidates = dirs.iter().map(size).filter(|&s| s >= needed_space).collect::<Vec<_>>();
+    let mut candidates = dirs
+        .iter()
+        .map(size)
+        .filter(|&s| s >= needed_space)
+        .collect::<Vec<_>>();
     candidates.sort();
     let result = candidates.get(0).unwrap();
 

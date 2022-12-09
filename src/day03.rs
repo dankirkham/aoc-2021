@@ -32,10 +32,7 @@ pub fn part2(input: &str) -> String {
     let result: u32 = rucksacks
         .chunks(3)
         .map(|lines| {
-            let chars: Vec<Vec<char>> = lines
-                .iter()
-                .map(|&line| line.chars().collect())
-                .collect();
+            let chars: Vec<Vec<char>> = lines.iter().map(|&line| line.chars().collect()).collect();
 
             let letter = *chars
                 .get(0)
