@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{char::ParseCharError, collections::HashSet, str::FromStr};
 
 #[derive(Clone, Hash, Debug, Default, PartialEq, Eq, PartialOrd, Ord)]
 struct Point {
@@ -6,64 +6,76 @@ struct Point {
     pub y: i32,
 }
 
+#[derive(Copy, Clone, Debug)]
+enum Direction {
+    Right,
+    Left,
+    Down,
+    Up,
+}
+
+impl FromStr for Direction {
+    type Err = ParseCharError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "U" => Ok(Self::Up),
+            "D" => Ok(Self::Down),
+            "L" => Ok(Self::Left),
+            "R" => Ok(Self::Right),
+            _ => panic!("invalid direction"),
+        }
+    }
+}
+
 impl Point {
     pub fn is_adjacent(&self, other: &Point) -> bool {
-        other.x >= self.x - 1 &&
-        other.x <= self.x + 1 &&
-        other.y >= self.y - 1 &&
-        other.y <= self.y + 1
+        other.x >= self.x - 1
+            && other.x <= self.x + 1
+            && other.y >= self.y - 1
+            && other.y <= self.y + 1
     }
 
     pub fn is_colinear(&self, other: &Point) -> bool {
-        assert!(!self.is_adjacent(other));
         self.x == other.x || self.y == other.y
     }
 
-    pub fn dir_to(&self, other: &Point) -> String {
-        assert!(!self.is_adjacent(other));
-        assert!(self.is_colinear(other));
+    pub fn dir_to(&self, other: &Point) -> Direction {
         if self.x < other.x {
-            "R".to_string()
+            Direction::Right
         } else if self.x > other.x {
-            "L".to_string()
+            Direction::Left
         } else if self.y < other.y {
-            "D".to_string()
+            Direction::Down
         } else if self.y > other.y {
-            "U".to_string()
+            Direction::Up
         } else {
             panic!("No dir to");
         }
     }
 
-    pub fn mov(&self, dir: &str) -> Point {
-        let mut p = self.clone();
+    pub fn mov(&mut self, dir: Direction) {
         match dir {
-            "U" => p.y = self.y - 1,
-            "D" => p.y = self.y + 1,
-            "L" => p.x = self.x - 1,
-            "R" => p.x = self.x + 1,
-            _ => panic!("invalid direction"),
+            Direction::Up => self.y -= 1,
+            Direction::Down => self.y += 1,
+            Direction::Left => self.x -= 1,
+            Direction::Right => self.x += 1,
         }
-
-        p
     }
 
     pub fn catch_up(&mut self, other: &Point) {
-        assert!(!self.is_adjacent(other));
-        assert!(!self.is_colinear(other));
-        if other.x > self.x  && other.y > self.y {
+        if other.x > self.x && other.y > self.y {
             // SE
             self.x += 1;
             self.y += 1;
-        } else if other.x < self.x  && other.y > self.y {
+        } else if other.x < self.x && other.y > self.y {
             // SW
             self.x -= 1;
             self.y += 1;
-        } else if other.x > self.x  && other.y < self.y {
+        } else if other.x > self.x && other.y < self.y {
             // NE
             self.x += 1;
             self.y -= 1;
-        } else if other.x < self.x  && other.y < self.y {
+        } else if other.x < self.x && other.y < self.y {
             // NW
             self.x -= 1;
             self.y -= 1;
@@ -99,33 +111,37 @@ impl Knot {
         next
     }
 
-    pub fn mov(&mut self, dir: &str) -> Point {
+    pub fn mov(&mut self, dir: Direction) -> Option<Point> {
         match &mut self.parent {
             None => {
-                self.point = self.point.mov(dir);
-            },
+                self.point.mov(dir);
+                Some(self.point.clone())
+            }
             Some(parent) => {
-                let head = parent.mov(dir);
-                if !head.is_adjacent(&self.point) {
-                    if head.is_colinear(&self.point) {
-                        let dir = self.point.dir_to(&head);
-                        self.point = self.point.mov(dir.as_str());
-                        assert!(head.is_adjacent(&self.point));
+                if let Some(head) = parent.mov(dir) {
+                    if !head.is_adjacent(&self.point) {
+                        if head.is_colinear(&self.point) {
+                            let dir = self.point.dir_to(&head);
+                            self.point.mov(dir);
+                        } else {
+                            self.point.catch_up(&head);
+                        }
+                        Some(self.point.clone())
                     } else {
-                        self.point.catch_up(&head);
-                        assert!(head.is_adjacent(&self.point));
+                        None
                     }
+                } else {
+                    None
                 }
             }
         }
-        self.point.clone()
     }
 }
 
 pub fn sim_rope(input: &str, length: usize) -> String {
     let moves = input.lines().map(|line| {
         let mut tokens = line.split(' ');
-        let dir = tokens.next().unwrap();
+        let dir = tokens.next().unwrap().parse::<Direction>().unwrap();
         let val = tokens.next().unwrap().parse::<usize>().unwrap();
         (dir, val)
     });
@@ -136,8 +152,9 @@ pub fn sim_rope(input: &str, length: usize) -> String {
 
     moves.for_each(|(dir, val)| {
         for _ in 0..val {
-            tail.mov(dir);
-            visited.insert(tail.point.clone());
+            if let Some(point) = tail.mov(dir) {
+                visited.insert(point.clone());
+            }
         }
     });
 

@@ -4,8 +4,8 @@ extern crate test;
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
     use aoc_2021::day08::{part1, part2};
+    use std::fs;
 
     use test::Bencher;
 

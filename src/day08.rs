@@ -194,10 +194,7 @@ pub fn part2(input: &str) -> String {
         }
     }
 
-    let result = scores
-        .into_iter()
-        .max()
-        .unwrap();
+    let result = scores.into_iter().max().unwrap();
 
     format!("{}", result)
 }
