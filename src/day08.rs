@@ -1,105 +1,109 @@
-fn read(input: &str) -> Vec<Vec<usize>> {
-    input
+use nalgebra::base::DMatrix;
+
+fn read(input: &str) -> DMatrix<usize> {
+    let nrows = input.lines().count();
+    let ncols = input.lines().next().unwrap().chars().count();
+    let iter = input
         .lines()
-        .map(|line| line.chars().map(|c| c as usize - 48).collect::<Vec<_>>())
-        .collect::<Vec<_>>()
+        .map(|line| line.chars().map(|c| c as usize - 48))
+        .flatten();
+    let mat = DMatrix::from_iterator(nrows, ncols, iter);
+    mat
+}
+
+fn check_trees(mut depth: usize, iter: impl Iterator<Item = usize>) -> Vec<usize> {
+    let mut v: Vec<usize> = vec![1];
+
+    v.extend(iter.map(|new_depth| {
+        if depth < new_depth {
+            depth = new_depth;
+            1_usize
+        } else {
+            0_usize
+        }
+    }));
+
+    v.push(1);
+
+    v
 }
 
 pub fn part1(input: &str) -> String {
     let forest = read(input);
-    let height = forest.len();
-    let width = forest[0].len();
-    let mut visible: Vec<Vec<bool>> = vec![vec![false; width]; height];
+    let (height, width) = forest.shape();
 
-    // Left
-    for y in 0..height {
-        visible[y][0] = true;
+    let left = forest
+        .row_iter()
+        .map(|row| {
+            let cols = row.columns_range(1..);
+            let iter = cols.iter().cloned();
 
-        let mut depth = forest[y][0];
-        let mut x = 1;
-        while x < width {
-            if depth < forest[y][x] {
-                depth = forest[y][x];
-                visible[y][x] = true;
-            }
-            x += 1;
-        }
-    }
-
-    // Right
-    for y in (0..height).rev() {
-        visible[y][width - 1] = true;
-
-        let mut depth = forest[y][width - 1];
-        let mut x = width - 2;
-        loop {
-            if depth < forest[y][x] {
-                depth = forest[y][x];
-                visible[y][x] = true;
-            }
-            if x > 0 {
-                x -= 1;
-            } else {
-                break;
-            }
-        }
-    }
-
-    // Top
-    for x in 0..width {
-        visible[0][x] = true;
-
-        let mut depth = forest[0][x];
-        let mut y = 1;
-        while y < height {
-            if depth < forest[y][x] {
-                depth = forest[y][x];
-                visible[y][x] = true;
-            }
-            y += 1;
-        }
-    }
-
-    // Bottom
-    for x in (0..width).rev() {
-        visible[height - 1][x] = true;
-
-        let mut depth = forest[height - 1][x];
-        let mut y = height - 2;
-        loop {
-            if depth < forest[y][x] {
-                depth = forest[y][x];
-                visible[y][x] = true;
-            }
-            if y > 0 {
-                y -= 1;
-            } else {
-                break;
-            }
-        }
-    }
-
-    let result: usize = visible
+            check_trees(*row.index(0), iter)
+        })
         .into_iter()
-        .map(|row| row.into_iter().filter(|v| *v).count())
-        .sum();
-    format!("{}", result)
+        .flatten();
+
+    let right = forest
+        .row_iter()
+        .map(|row| {
+            let cols = row.columns_range(..width - 2);
+            let iter = cols.iter().cloned().rev();
+
+            check_trees(*row.index(width - 1), iter)
+        })
+        .into_iter()
+        .flatten();
+
+    let top = forest
+        .column_iter()
+        .map(|column| {
+            let rows = column.rows_range(0..);
+            let iter = rows.iter().cloned();
+
+            check_trees(*column.index(0), iter)
+        })
+        .into_iter()
+        .flatten();
+
+    let bottom = forest
+        .column_iter()
+        .map(|column| {
+            let rows = column.rows_range(..height - 2);
+            let iter = rows.iter().cloned().rev();
+
+            check_trees(*column.index(height - 1), iter)
+        })
+        .into_iter()
+        .flatten();
+
+    let total = left
+        .into_iter()
+        .zip(right)
+        .map(|(a, b)| a + b)
+        .zip(top)
+        .map(|(a, b)| a + b)
+        .zip(bottom)
+        .map(|(a, b)| a + b)
+        .map(|v| dbg!(v))
+        .filter(|&v| v > 0)
+        .count();
+
+    format!("{}", total)
 }
 
-fn calculate_view(x: usize, y: usize, forest: &Vec<Vec<usize>>) -> usize {
-    let height = forest.len();
-    let width = forest[0].len();
+fn calculate_view(x: usize, y: usize, forest: &DMatrix<usize>) -> usize {
+    let (height, width) = forest.shape();
 
     let left = if x == 0 {
         0
     } else {
         let mut total = 0;
-        let depth = forest[y][x];
+        let depth = *forest.index((y, x));
         let mut x = x - 1;
         loop {
             total += 1;
 
-            if depth <= forest[y][x] {
+            if depth <= *forest.index((y, x)) {
                 break;
             }
 
@@ -116,12 +120,12 @@ fn calculate_view(x: usize, y: usize, forest: &Vec<Vec<usize>>) -> usize {
         0
     } else {
         let mut total = 0;
-        let depth = forest[y][x];
+        let depth = *forest.index((y, x));
         let mut x = x + 1;
         loop {
             total += 1;
 
-            if depth <= forest[y][x] {
+            if depth <= *forest.index((y, x)) {
                 break;
             }
 
@@ -138,12 +142,12 @@ fn calculate_view(x: usize, y: usize, forest: &Vec<Vec<usize>>) -> usize {
         0
     } else {
         let mut total = 0;
-        let depth = forest[y][x];
+        let depth = *forest.index((y, x));
         let mut y = y - 1;
         loop {
             total += 1;
 
-            if depth <= forest[y][x] {
+            if depth <= *forest.index((y, x)) {
                 break;
             }
 
@@ -160,12 +164,12 @@ fn calculate_view(x: usize, y: usize, forest: &Vec<Vec<usize>>) -> usize {
         0
     } else {
         let mut total = 0;
-        let depth = forest[y][x];
+        let depth = *forest.index((y, x));
         let mut y = y + 1;
         loop {
             total += 1;
 
-            if depth <= forest[y][x] {
+            if depth <= *forest.index((y, x)) {
                 break;
             }
 
@@ -183,8 +187,7 @@ fn calculate_view(x: usize, y: usize, forest: &Vec<Vec<usize>>) -> usize {
 
 pub fn part2(input: &str) -> String {
     let forest = read(input);
-    let height = forest.len();
-    let width = forest[0].len();
+    let (height, width) = forest.shape();
 
     let mut scores: Vec<usize> = Vec::with_capacity(height * width);
     for y in 0..height {
@@ -194,10 +197,7 @@ pub fn part2(input: &str) -> String {
         }
     }
 
-    let result = scores
-        .into_iter()
-        .max()
-        .unwrap();
+    let result = scores.into_iter().max().unwrap();
 
     format!("{}", result)
 }
@@ -212,6 +212,8 @@ mod test {
 33549
 35390";
 
+    const LARGE_INPUT: &str = include_str!("../input/08.txt");
+
     #[test]
     fn test_part1() {
         let result = part1(INPUT);
@@ -224,5 +226,19 @@ mod test {
         let result = part2(INPUT);
 
         assert_eq!(result, "8");
+    }
+
+    // #[test]
+    // fn test_part1_full() {
+    //     let result = part1(LARGE_INPUT);
+
+    //     assert_eq!(result, "1827");
+    // }
+
+    #[test]
+    fn test_part2_full() {
+        let result = part2(LARGE_INPUT);
+
+        assert_eq!(result, "335580");
     }
 }
