@@ -8,7 +8,7 @@ curl \
   -A "Input fetch for daniel.a.kirkham@gmail.com"\
   https://adventofcode.com/2022/day/$1/input > input/$1.txt
 
-echo "mod day$1;" >> src/lib.rs
+echo "pub mod day$1;" >> src/lib.rs
 sed -i "s/01/$1/g" benches/$1.rs
 sed -i "s/01/$1/g" src/bin/$1.rs
 nvim src/day$1.rs

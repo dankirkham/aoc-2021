@@ -39,7 +39,7 @@ impl State {
 
     fn draw(&mut self) {
         if self.x >= (self.col as i32) - 1 && self.x <= (self.col as i32) + 1 {
-             self.pixels[self.row * 40 + self.col] = true;
+            self.pixels[self.row * 40 + self.col] = true;
         }
     }
 
@@ -84,10 +84,7 @@ struct AddxTask {
 
 impl AddxTask {
     pub fn new(arg: i32) -> Self {
-        Self {
-            ticks: 1,
-            arg
-        }
+        Self { ticks: 1, arg }
     }
 }
 
@@ -131,9 +128,9 @@ pub fn read_program(input: &str) -> impl Iterator<Item = Operation> + '_ {
             "addx" => {
                 let arg = tokens.next().unwrap().parse::<i32>().unwrap();
                 Operation::Addx(arg)
-            },
+            }
             "noop" => Operation::Noop,
-            _ => panic!()
+            _ => panic!(),
         }
     })
 }
@@ -388,12 +385,15 @@ noop";
     fn test_part2() {
         let result = part2(INPUT);
 
-        assert_eq!(result, "##..##..##..##..##..##..##..##..##..##..
+        assert_eq!(
+            result,
+            "##..##..##..##..##..##..##..##..##..##..
 ###...###...###...###...###...###...###.
 ####....####....####....####....####....
 #####.....#####.....#####.....#####.....
 ######......######......######......####
 #######.......#######.......#######.....
-");
+"
+        );
     }
 }
