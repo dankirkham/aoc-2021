@@ -121,11 +121,12 @@ impl FromStr for Monkey {
 }
 
 impl Monkey {
-    fn operate_one(&mut self, item: usize, part1: bool) -> Transaction {
-        let mut item = self.operation.eval(item);
-        if part1 {
-            item /= 3;
-        }
+    fn operate_one(&mut self, item: usize, lcm: Option<usize>) -> Transaction {
+        let item = self.operation.eval(item);
+        let item = match lcm {
+            None => item / 3,
+            Some(lcm) => item % lcm,
+        };
         let monkey = if item % self.test == 0 {
             self.true_monkey
         } else {
@@ -136,11 +137,11 @@ impl Monkey {
         Transaction { item, monkey }
     }
 
-    pub fn operate(&mut self, part1: bool) -> Vec<Transaction> {
+    pub fn operate(&mut self, lcm: Option<usize>) -> Vec<Transaction> {
         let mut txs: Vec<Transaction> = Vec::with_capacity(self.items.len());
         while !self.items.is_empty() {
             let item = self.items.pop_front().unwrap();
-            let tx = self.operate_one(item, part1);
+            let tx = self.operate_one(item, lcm);
             txs.push(tx);
         }
         txs
@@ -153,6 +154,10 @@ impl Monkey {
     pub fn inspections(&self) -> usize {
         self.inspections
     }
+
+    pub fn test(&self) -> usize {
+        self.test
+    }
 }
 
 pub fn part1(input: &str) -> String {
@@ -164,7 +169,7 @@ pub fn part1(input: &str) -> String {
     for _ in 0..20 {
         for i in 0..monkeys.len() {
             let monkey = &mut monkeys[i];
-            let txs = monkey.operate(true);
+            let txs = monkey.operate(None);
             txs.into_iter().for_each(|tx| {
                 let monkey = &mut monkeys[tx.monkey];
                 monkey.receive_item(tx.item);
@@ -190,10 +195,12 @@ pub fn part2(input: &str) -> String {
         .map(|s| Monkey::from_str(s).unwrap())
         .collect::<Vec<_>>();
 
+    let lcm = monkeys.iter().fold(1_usize, |lcm, monkey| lcm * monkey.test());
+
     for _ in 0..10000 {
         for i in 0..monkeys.len() {
             let monkey = &mut monkeys[i];
-            let txs = monkey.operate(false);
+            let txs = monkey.operate(Some(lcm));
             txs.into_iter().for_each(|tx| {
                 let monkey = &mut monkeys[tx.monkey];
                 monkey.receive_item(tx.item);
