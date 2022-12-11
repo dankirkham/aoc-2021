@@ -1,4 +1,4 @@
-use std::{char::ParseCharError, collections::VecDeque, str::FromStr};
+use std::{char::ParseCharError, collections::VecDeque, str::FromStr, fmt::format};
 
 #[derive(Debug)]
 struct Transaction {
@@ -160,16 +160,23 @@ impl Monkey {
     }
 }
 
-pub fn part1(input: &str) -> String {
+pub fn run(input: &str, part1: bool) -> String {
     let mut monkeys = input
         .split("\n\n")
         .map(|s| Monkey::from_str(s).unwrap())
         .collect::<Vec<_>>();
 
-    for _ in 0..20 {
+    let (rounds, lcm) = if part1 {
+        (20, None)
+    } else {
+        let lcm = monkeys.iter().fold(1_usize, |lcm, monkey| lcm * monkey.test());
+        (10000, Some(lcm))
+    };
+
+    for _ in 0..rounds {
         for i in 0..monkeys.len() {
             let monkey = &mut monkeys[i];
-            let txs = monkey.operate(None);
+            let txs = monkey.operate(lcm);
             txs.into_iter().for_each(|tx| {
                 let monkey = &mut monkeys[tx.monkey];
                 monkey.receive_item(tx.item);
@@ -185,39 +192,15 @@ pub fn part1(input: &str) -> String {
     let mut sorted_monkey = monkey_inspections.into_iter().rev();
 
     let result = sorted_monkey.next().unwrap() * sorted_monkey.next().unwrap();
-
     format!("{}", result)
 }
 
+pub fn part1(input: &str) -> String {
+    run(input, true)
+}
+
 pub fn part2(input: &str) -> String {
-    let mut monkeys = input
-        .split("\n\n")
-        .map(|s| Monkey::from_str(s).unwrap())
-        .collect::<Vec<_>>();
-
-    let lcm = monkeys.iter().fold(1_usize, |lcm, monkey| lcm * monkey.test());
-
-    for _ in 0..10000 {
-        for i in 0..monkeys.len() {
-            let monkey = &mut monkeys[i];
-            let txs = monkey.operate(Some(lcm));
-            txs.into_iter().for_each(|tx| {
-                let monkey = &mut monkeys[tx.monkey];
-                monkey.receive_item(tx.item);
-            });
-        }
-    }
-
-    let mut monkey_inspections = monkeys
-        .into_iter()
-        .map(|m| m.inspections())
-        .collect::<Vec<_>>();
-    monkey_inspections.sort();
-    let mut sorted_monkey = monkey_inspections.into_iter().rev();
-
-    let result = sorted_monkey.next().unwrap() * sorted_monkey.next().unwrap();
-
-    format!("{}", result)
+    run(input, false)
 }
 
 #[cfg(test)]
